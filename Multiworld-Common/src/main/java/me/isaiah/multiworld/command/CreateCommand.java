@@ -1,14 +1,26 @@
 package me.isaiah.multiworld.command;
 
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Random;
 
+import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricDynamicRegistryProvider;
+import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
+import net.fabricmc.fabric.impl.biome.BiomeSourceAccess;
+import net.minecraft.client.render.DimensionEffects;
+import net.minecraft.registry.*;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.world.biome.BuiltinBiomes;
+import net.minecraft.world.biome.source.*;
+import net.minecraft.world.biome.source.util.MultiNoiseUtil;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import me.isaiah.multiworld.MultiworldMod;
 
@@ -18,6 +30,9 @@ import net.minecraft.server.world.ServerWorld;
 
 import java.io.File;
 import me.isaiah.multiworld.config.*;
+import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
+import net.minecraft.world.gen.chunk.ChunkGenerators;
+import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 
 public class CreateCommand {
 	
@@ -41,7 +56,13 @@ public class CreateCommand {
         String env = args[2];
         ChunkGenerator gen = get_chunk_gen(mc, env);
         Identifier dim = get_dim_id(env);
-        
+
+		//TODO: Ajout du nouveau ChunkGenerator
+		Registry<ChunkGeneratorSettings> registry = mc.getRegistryManager().get(RegistryKeys.CHUNK_GENERATOR_SETTINGS);
+		RegistryEntry<ChunkGeneratorSettings> registryEntry = registry.getEntry(registry.get(ChunkGeneratorSettings.OVERWORLD));
+		MultiNoiseBiomeSource biomeSource = MultiNoiseBiomeSource.create();
+		NoiseChunkGenerator noiseChunkGenerator = new NoiseChunkGenerator(biomeSource,registryEntry);
+
         if (null == dim) {
         	System.out.println("Null dimenstion ");
         	dim = Util.OVERWORLD_ID;
@@ -90,7 +111,6 @@ public class CreateCommand {
      */
     public static ChunkGenerator get_chunk_gen(MinecraftServer mc, String env) {
 		ChunkGenerator gen = MultiworldMod.get_world_creator().get_chunk_gen(mc, env);
-
 		if (customs.containsKey(env)) {
 			return customs.get(env);
 		}
